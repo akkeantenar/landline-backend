@@ -1,0 +1,18 @@
+[build]
+  command = "npm install"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://landline-frontend.vercel.app/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/health"
+  to = "https://landline-frontend.vercel.app/health"
+  status = 200
+

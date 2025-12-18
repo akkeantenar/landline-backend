@@ -115,13 +115,20 @@ async function generateInventory(client) {
   const schedulesResult = await client.query('SELECT id, route_id FROM schedules');
   const schedules = schedulesResult.rows;
 
-  const today = new Date();
+  const today = new Date('2025-12-18T00:00:00');
   today.setHours(0, 0, 0, 0);
+
+  const getDateString = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   for (let day = 0; day < 30; day++) {
     const date = new Date(today);
     date.setDate(today.getDate() + day);
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = getDateString(date);
 
     const dayOfWeek = date.getDay();
 

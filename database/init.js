@@ -147,14 +147,43 @@ async function generateInventory(client) {
         }
 
         const totalSeats = 14;
-        const availableSeats = totalSeats;
+        let availableSeats = totalSeats;
 
-        await client.query(
-          `INSERT INTO inventory (schedule_id, date, total_seats, available_seats, price_modifier)
-           VALUES ($1, $2, $3, $4, $5)
-           ON CONFLICT (schedule_id, date) DO NOTHING`,
-          [schedule.id, dateStr, totalSeats, availableSeats, priceModifier]
-        );
+        if (day === 0) {
+          const existingInventory = await client.query(
+            `SELECT id FROM inventory WHERE schedule_id = $1 AND date = $2`,
+            [schedule.id, dateStr]
+          );
+          
+          if (existingInventory.rows.length > 0) {
+            const inventoryId = existingInventory.rows[0].id;
+            const reservedCount = await client.query(
+              `SELECT COUNT(*) as count FROM reservations 
+               WHERE inventory_id = $1 AND status != 'cancelled'`,
+              [inventoryId]
+            );
+            const reserved = parseInt(reservedCount.rows[0]?.count || 0);
+            availableSeats = Math.max(0, totalSeats - reserved);
+          }
+
+          await client.query(
+            `INSERT INTO inventory (schedule_id, date, total_seats, available_seats, price_modifier)
+             VALUES ($1, $2, $3, $4, $5)
+             ON CONFLICT (schedule_id, date) 
+             DO UPDATE SET 
+               total_seats = $3,
+               available_seats = $4,
+               price_modifier = $5`,
+            [schedule.id, dateStr, totalSeats, availableSeats, priceModifier]
+          );
+        } else {
+          await client.query(
+            `INSERT INTO inventory (schedule_id, date, total_seats, available_seats, price_modifier)
+             VALUES ($1, $2, $3, $4, $5)
+             ON CONFLICT (schedule_id, date) DO NOTHING`,
+            [schedule.id, dateStr, totalSeats, availableSeats, priceModifier]
+          );
+        }
       }
     }
   }

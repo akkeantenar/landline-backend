@@ -116,6 +116,7 @@ async function generateInventory(client) {
   const schedules = schedulesResult.rows;
 
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   for (let day = 0; day < 30; day++) {
     const date = new Date(today);
